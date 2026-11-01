@@ -115,7 +115,7 @@ spark=(x,y,c,n=8)=>{for(;n--;)PA.push({x,y,vx:(Math.random()-.5)*200,vy:-Math.ra
 shk=d=>{if(!RM)shake=T()+d},fl=(c,d=.25)=>flash={c,t:T(),d};
 const vib=p=>{try{!muted&&navigator.vibrate&&navigator.vibrate(p)}catch(e){}};
 const FAM=['家屬：「你剛剛有看過教學嗎？」','路人：「我拍到了，要傳群組嗎？」','家屬：「說好的 AED 呢？」','總醫師：「下次先深呼吸。」'];
-let TUT=0;try{TUT=+localStorage.cprTut||0}catch(e){}
+let TUT=0;try{TUT=+localStorage.cprTut2||0}catch(e){}
 const ORDER=[5,4,6,0,1,7,8,3,2,9],DIF=[[.08,.075,.14,1.6,0,.5],[.15,.07,.13,1.8,.15,.6],[.2,.065,.12,2,.15,.7],[.24,.062,.115,2.2,.2,.8],[.28,.058,.11,2.4,.3,.9],[.3,.055,.105,2.5,.35,1],[.36,.052,.1,2.6,.4,1.05],[.3,.05,.098,2.7,.45,1.1],[.34,.048,.095,2.8,.6,1.15],[.38,.045,.09,3,.7,1.25]];
 let RUN={st:0,total:0};
 function mkD(i,l){const d=DIF[i];return{dec:Math.min(.5,d[0]+.05*l),w:[Math.max(.04,(d[1]-.004*l)*.92),Math.max(.08,(d[2]-.006*l)*.92)],hd:(d[3]+.3*l)*1.25,off:Math.min(.8,d[4]+.15*l),dr:(d[5]+.15*l)*1.4}}
@@ -134,18 +134,18 @@ const up=e=>{if(adGo){adGo=0;try{window.open(AD_URL,'_blank')}catch(x){}}ptrs.de
 addEventListener('pointerup',up);addEventListener('pointercancel',up);addEventListener('blur',()=>{ptrs.clear();P.on=0});
 document.addEventListener('visibilitychange',()=>{ptrs.clear();P.on=0});addEventListener('contextmenu',e=>e.preventDefault());
 document.getElementById('o').onclick=e=>e.currentTarget.style.display='none';
-function tap(x,y){if(st=='cal')return calTap();if(st=='cpr')pump();else if(st=='aed'&&G.ph<2)G.pump=T();
+function tap(x,y){if(st=='cal')return calTap();if(st=='cpr')pump(x<180?0:1);else if(st=='aed'&&G.ph<2)G.pump=T();
 else if(st=='qte1'&&Math.abs(y-400)<120&&!G.done){G.taps2++;S.ok(1);spark(x,y,C.amber);fx('先生！你還好嗎！',C.mint,x,y-30);if(G.taps2>=3){G.cons=1;G.done=1;fl('#ffffff',.2);go('qte2');qNext()}}}
 /* ---------- 按壓判定 ---------- */
 function res(n,k,s,c){n.o||G.taps.push(T());n.r=k;G.seen++;G.combo++;G.mx=Math.max(G.mx,G.combo);G.score+=(k==2?100:50)+G.combo*5;G.hp=Math.min(100,G.hp+(k==2?2:.8));G.stam=Math.min(100,G.stam+(k==2?1.5:0));if(k==2)G.perf++;else G.good++;mel(k,n.t);k==2&&S.ok(1);vib(k==2?14:7);fx(s,c,180+(Math.random()-.5)*60,RY-50);spark(180,RY,c,k==2?18:8);RG.push({t:T(),c,k});G.combo%10==0&&(BN={s:G.combo+' COMBO!',t:T()});k==2&&(zoom=T())}
 function pen(s,h=7,sm=13){vib([30,40,30]);G.combo=0;G.hp-=h;G.stam-=sm;shk(.25);S.bad();fx(s,C.red,180+(Math.random()-.5)*60,RY-50)}
-function pump(){const t=T();G.pump=t;let b=null,bd=9;for(const n of G.notes)if(!n.r){const a=Math.abs(t-n.t);if(a<.23&&a<bd){bd=a;b=n}}
+function pump(sd){const t=T();G.pump=t;(G.bs=G.bs||[0,0])[sd]=t;let b=null,bd=9;for(const n of G.notes)if(!n.r){const a=Math.abs(t-n.t);if(a<.23&&a<bd){bd=a;b=n}}
 if(!b)return pen('別亂壓！',3,8);const d=t-b.t,a=Math.abs(d);
-if(b.dec){b.r=-2;G.seen++;return pen('中計了！別按骷髏',8,15)}
+if((b.dec?1:0)!=sd){b.r=-1;G.seen++;return pen(b.dec?'骷髏要按右邊！':'愛心要按左邊！',8,15)}
 if(a<G.d.w[0])res(b,2,'PERFECT!',C.amber);else if(a<G.d.w[1])res(b,1,d<0?'GOOD 偏快':'GOOD 偏慢',C.mint);else{b.r=-1;G.seen++;pen(d<0?'太快了！':'太慢了！')}}
 /* ---------- 流程 ---------- */
 const RY=490;
-function beginCPR(n,old){const base=RT()+.25,p=G.p;G.base=base;G.notes=old?old.map((o,k)=>({t:base+(4+k)*.5,r:0,dec:o.dec})):[];if(!old)for(let k=0;k<n;k++){G.notes.push({t:base+(4+k)*.5,r:0,dec:k>1&&Math.random()<G.d.dec?1:0});if(G.d.off&&k%4==3&&Math.random()<G.d.off)G.notes.push({t:base+(4+k)*.5+.25,r:0,dec:0,o:1})}M.t0=base;M.s=0;M.y=PT.indexOf(p);G.mi=0;M.on=1;G.lt=T();go('cpr')}
+function beginCPR(n,old){const base=RT()+.25,p=G.p;G.base=base;G.notes=old?old.map((o,k)=>({t:base+(4+k)*.5,r:0,dec:o.dec})):[];if(!old)for(let k=0;k<n;k++){G.notes.push({t:base+(4+k)*.5,r:0,dec:k>0&&Math.random()<Math.min(.55,.32+G.d.dec)?1:0});if(G.d.off&&k%4==3&&Math.random()<G.d.off)G.notes.push({t:base+(4+k)*.5+.25,r:0,dec:0,o:1})}M.t0=base;M.s=0;M.y=PT.indexOf(p);G.mi=0;M.on=1;G.lt=T();go('cpr')}
 function endCycle(){G.ci++;M.on=0;G.notes=[];G.ph=0;G.pt=T();G.sd=0;go('aed')}
 function startRun(){G.ok119=G.q[0];G.aed=G.q[1];G.hp=28+G.cons*5+(G.ok119?5:0)+(G.aed?3:0);const x=Math.min(RUN.st,5)*2;G.cyc=(G.aed?[16,20,24]:[26,24]).map(n=>n+x);beginCPR(G.cyc[0])}
 const qNext=()=>{G.dir=Math.random()<.5?-1:1;G.qt0=T()};
@@ -165,7 +165,7 @@ function hud(){bar('生存值',12,G.hp,G.hp>60?'#5cff8a':G.hp>30?C.amber:C.red);
 function scene(t,pm,rest){R_(90,600,190,8,'#0007');const bb=Math.abs(Math.sin((t-(G.base||0))*4*Math.PI))*6;const cw=crowd(G.p);man(44,440-bb,4,{...B0,id:cw[0]});man(316,440-bb,4,{...B0,id:cw[1]});lay(180,548,7,G.p,!G.rev);const d=pm&&t-pm<.1?12:0;if(!rest){R_(172,300,16,220+d,'#e8f4f8');R_(172,300,3,220+d,'#9bb');R_(170,514+d,20,14,'#f2c7a0')}}
 function dTitle(t){if(ok('key')){g.imageSmoothingEnabled=true;g.drawImage(IM.key,0,0,W,H)}else{R_(0,0,W,H,'#14102b');glow('CPR 急救大作戰',180,200,34,C.pink)}
 const so=(s,x,y,sz,c)=>{g.font=`900 ${sz}px ${FF}`;g.textAlign='center';g.textBaseline='middle';g.lineJoin='round';g.lineWidth=sz/3+2;g.strokeStyle='#0a0820';g.strokeText(s,x,y);g.fillStyle=c;g.fillText(s,x,y)};
-['點肩膀、滑動指派路人幫忙','跟著節奏點愛心，別按骷髏','聽到 CLEAR 立刻放手！'].forEach((s,i)=>so(s,180,462+i*24,14,C.paper));
+['點肩膀、滑動指派路人幫忙','愛心點左邊、骷髏點右邊','聽到 CLEAR 立刻放手！'].forEach((s,i)=>so(s,180,462+i*24,14,C.paper));
 btn('開始值班',70,540,220,52,C.pink,startGame,'#fff',24);so('最高分 '+best,180,608,13,C.mint);so('開發者 Threads @alexchiencsl',180,628,11,C.paper);B.push({x:70,y:618,w:220,h:20,fn:()=>{try{window.open('https://www.threads.net/@alexchiencsl','_blank')}catch(e){}}});btn('校正延遲',196,12,72,28,'#3b3556',()=>{initA();calStart(1)},C.paper,12);btn(muted?'音效 關':'音效 開',276,12,72,28,'#3b3556',()=>{muted=!muted;mst&&(mst.gain.value=muted?0:1)},C.paper,12)}
 function dLoad(t){R_(0,0,W,H,'#0a0820');const ks=Object.keys(DATA),f=ks.filter(k=>ok(k)).length/ks.length;glow('CPR 急救大作戰',180,250,26,C.pink);txt('載入中… '+Math.round(f*100)+'%',180,330,16,C.paper);R_(60,360,240,14,'#000');R_(62,362,236*f,10,C.mint);if(f>=1||performance.now()>10000)go('title')}
 function calStart(man){initA();const b=RT()+1.2;G={man,cb:b,ds:[],hit:{}};for(let i=0;i<12;i++)tone(1000,b+i*.5,.05,'square',.15);go('cal')}
@@ -183,12 +183,12 @@ ico('heart',180,215+Math.sin(t*4)*6,56+Math.sin(t*8)*4,'#ff3b4e');
 glow(last?'全部救回！':'救回來了！',180,100,36,C.amber);txt(last?'你是今晚最強的休假醫護':'自主循環恢復（ROSC）',180,142,15,C.paper);
 R_(40,320,280,58,'#fff');R_(176,378,12,10,'#fff');wrap(G.p.ep,52,338,256,13,C.ink,18);
 if(e>1.2)btn('查看病歷',90,590,180,46,C.pink,()=>go('res'),'#fff',20)}
-function dTut(t){R_(0,0,W,H,'#0a0820ee');const p=G.tp,D=[['跟著節奏點愛心','愛心落到圈圈時，用力點一下螢幕'],['骷髏千萬別按！','按到會扣血，放著不管反而加分'],['看到 CLEAR 立刻放手！','手指離開螢幕，否則電到你自己']][p];
+function dTut(t){R_(0,0,W,H,'#0a0820ee');const p=G.tp,D=[['愛心 ＝ 點左邊','愛心落到圈圈時，點左半邊螢幕'],['骷髏 ＝ 點右邊','骷髏落到圈圈時，點右半邊螢幕，按錯邊會扣血'],['看到 CLEAR 立刻放手！','手指離開螢幕，否則電到你自己']][p];
 txt(D[0],180,90,26,C.amber);const ph=t%1;
-if(p<2){g.strokeStyle=ph>.9?C.amber:'#fff';g.lineWidth=3;g.beginPath();g.arc(180,380,ph>.9?32:26,0,7);g.stroke();(p?skull:heart)(180,160+ph*220,3);if(ph>.88)txt(p?'✘ 不要按':'✔ 點！',180,300,28,p?C.red:C.mint)}
+if(p<2){g.strokeStyle=ph>.9?C.amber:'#fff';g.lineWidth=3;g.beginPath();g.arc(180,380,ph>.9?32:26,0,7);g.stroke();(p?skull:heart)(180,160+ph*220,3);if(ph>.88)txt(p?'點右邊 ▶':'◀ 點左邊',180,300,28,p?'#b79cff':C.red)}
 else{R_(50,190,260,150,Math.floor(t*6)%2?'#ff3b4e':'#7a0010');txt('CLEAR!',180,245,56,'#fff');txt('✋ 手離開螢幕',180,308,22,'#fff')}
 txt(D[1],180,460,15,C.paper);for(let i=0;i<3;i++)R_(162+i*14,490,8,8,i==p?C.pink:'#3b3556');
-btn(p<2?'下一步':'開始值班',70,520,220,52,C.pink,()=>{if(p<2)G.tp++;else{TUT=1;try{localStorage.cprTut=1}catch(e){}newRun(PT[ORDER[0]])}},'#fff',22)}
+btn(p<2?'下一步':'開始值班',70,520,220,52,C.pink,()=>{if(p<2)G.tp++;else{TUT=1;try{localStorage.cprTut2=1}catch(e){}newRun(PT[ORDER[0]])}},'#fff',22)}
 function dPick(t){R_(0,0,W,H,'#14102bdd');txt('今天要救誰？',180,56,28,C.amber);[3,0,1,2].map(i=>PT[i]).forEach((p,i)=>{const y=96+i*104;btn('',24,y,312,92,'#2b2640',()=>newRun(p));man(58,y+84,2.8,p);txt(p.n,104,y+24,16,C.paper,'left');txt(p.d,104,y+50,14,C.amber,'left');txt(p.off?'有陷阱＋切分音':p.dec?'有陷阱：別按骷髏':'只有愛心，安心壓',104,y+74,12,C.mint,'left');txt('♪ '+STY[PT.indexOf(p)].n,326,y+50,11,C.pink,'right')})}
 function dWalk(t){const pr=Math.min(1,(t-t0)/2.8),f=pr>.7;txt('第 '+(RUN.st+1)+' 關',180,50,30,C.amber);txt('休假中，路過街頭…',180,88,18,C.paper);
 if(f){txt('有人倒下了！！',180,120,26,C.red);lay(270,585,6,G.p)}else{man(270,585,6,G.p);R_(180,380,170,34,'#fff');R_(250,414,10,10,'#fff');txt(G.p.say,265,397,13,C.ink,'center',null)}
@@ -203,11 +203,12 @@ txt(G.dir<0?'◀◀ 往左滑':'往右滑 ▶▶',180,500,26,Math.floor(t*4)%2?C
 const DM=['感謝大哥的火箭！','前排','這是演的吧','笑死','+1','求連結','我也要壓'];
 function mech(t){const id=G.p.id;if(id=='str')DM.forEach((s,i)=>{g.globalAlpha=.85;txt(s,W+40-((t*60+i*95)%(W+220)),130+i*52,15,'#fff');g.globalAlpha=1});
 if(id=='chef'){const sp=((t-G.base)/3)%1;if(sp>0&&sp<.4){g.shadowColor='#fff';g.shadowBlur=40;g.globalAlpha=Math.sin(sp/.4*Math.PI)*.85;R_(120,200,120,200,'#eef');g.globalAlpha=1;g.shadowBlur=0}}}
+function cprBtns(t){const bs=G.bs||[0,0];[[0,12,'#ff3b4e',heart],[1,184,'#8a5cff',skull]].forEach(([i,x,c,fn])=>{const on=t-bs[i]<.12;g.globalAlpha=on?.9:.55;g.fillStyle=c;g.beginPath();g.roundRect(x,574,164,56,14);g.fill();g.globalAlpha=1;g.lineWidth=3;g.strokeStyle=on?'#fff':'#ffffffaa';g.stroke();fn(x+82,602,3);txt(i?'骷髏 → 右':'← 左 愛心',x+82,574-8,11,C.paper,'center',C.ink)})}
 function dCpr(t){dt=Math.min(.05,t-G.lt);G.lt=t;const e=t-G.base,K=(RY-130)/1.2;scene(t,G.pump);beatFx(t);
 G.hp-=dt*(G.stam<=0?G.d.hd*2:G.d.hd);G.stam-=dt*G.d.dr;R_(150,120,60,RY-90,'#ffffff14');
 g.strokeStyle='#fff';g.lineWidth=3;g.beginPath();g.arc(180,RY,26*(G.pump&&t-G.pump<.12?1.15:1),0,7);g.stroke();
-for(const n of G.notes){if(!n.r&&t>n.t+.2){if(n.dec){n.r=3;G.score+=30;G.hp=Math.min(100,G.hp+1.5);fx('閃過！',C.mint,180,RY-50)}else{n.r=-1;G.seen++;pen('漏拍！',7,13)}}if(!n.r){const y=RY-(n.t-t)*K;if(y>110&&y<RY+40){g.globalAlpha=G.p.id=='dj'&&y>300?.12:1;(n.dec?skull:heart)(180,y,3);g.globalAlpha=1}}}
-const i=Math.floor(e/.5);if(e>=0&&i<4)txt(['3','2','1','壓！'][i],180,280,64,C.amber);mech(t);hud();
+for(const n of G.notes){if(!n.r&&t>n.t+.2){n.r=-1;G.seen++;pen('漏拍！',7,13)}if(!n.r){const y=RY-(n.t-t)*K;if(y>110&&y<RY+40){g.globalAlpha=G.p.id=='dj'&&y>300?.12:1;(n.dec?skull:heart)(180,y,3);g.globalAlpha=1}}}
+const i=Math.floor(e/.5);if(e>=0&&i<4)txt(['3','2','1','壓！'][i],180,280,64,C.amber);mech(t);hud();cprBtns(t);
 if((G.stam<=0||G.hp<=12)&&G.ads<2){M.on=0;go('rescue');return}if(G.hp<=0)return end('dead');
 if(G.notes.every(n=>n.r)&&t>G.notes[G.notes.length-1].t+.1)endCycle()}
 function dAed(t){dt=Math.min(.05,t-lt);const e=t-G.pt;scene(t,G.pump,1);
