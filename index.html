@@ -118,7 +118,10 @@ const FAM=['家屬：「你剛剛有看過教學嗎？」','路人：「我拍�
 let TUT=0;try{TUT=+localStorage.cprTut2||0}catch(e){}
 const ORDER=[5,4,6,0,1,7,8,3,2,9],DIF=[[.08,.075,.14,1.6,0,.5],[.15,.07,.13,1.8,.15,.6],[.2,.065,.12,2,.15,.7],[.24,.062,.115,2.2,.2,.8],[.28,.058,.11,2.4,.3,.9],[.3,.055,.105,2.5,.35,1],[.36,.052,.1,2.6,.4,1.05],[.3,.05,.098,2.7,.45,1.1],[.34,.048,.095,2.8,.6,1.15],[.38,.045,.09,3,.7,1.25]];
 let RUN={st:0,total:0};
-function mkD(i,l){const d=DIF[i];return{dec:Math.min(.5,d[0]+.05*l),w:[Math.max(.04,(d[1]-.004*l)*.92),Math.max(.08,(d[2]-.006*l)*.92)],hd:(d[3]+.3*l)*1.25,off:Math.min(.8,d[4]+.15*l),dr:(d[5]+.15*l)*1.4}}
+function mkD0(i,l){const d=DIF[i];return{dec:Math.min(.5,d[0]+.05*l),w:[Math.max(.04,(d[1]-.004*l)*.92),Math.max(.08,(d[2]-.006*l)*.92)],hd:(d[3]+.3*l)*1.25,off:Math.min(.8,d[4]+.15*l),dr:(d[5]+.15*l)*1.4}}
+/* 第1、2關超簡單，第3關開始加難：血量/體力消耗變慢、判定變寬、音符掉得慢 */
+function mkD(i,l){const o=mkD0(i,l),e=[[.5,.5,1.45],[.6,.6,1.35],[.85,.85,1.15]][RUN.st]||[1,1,1];o.hd*=e[0];o.dr*=e[1];o.w=o.w.map(v=>v*e[2]);return o}
+const LK=()=>[1.3,1.3,1.1,1,.9,.8][Math.min(RUN.st,5)];
 const QT=()=>2.6-Math.min(RUN.st,6)*.2,CL=()=>2+Math.min(RUN.st,4)*.25;
 function begin(){if(TUT)newRun(PT[ORDER[0]]);else{G={tp:0};go('tut')}}
 function startGame(){RUN={st:0,total:0};if(CAL==null&&A)calStart(0);else begin()}
@@ -149,7 +152,8 @@ const RY=490;
 const PAT=[['H.H.S.S.','H.S.H.S.','H.H.H.S.','S.S.H.H.','H.S.S.H.','HHS.S.H.'],
 ['HH.SS.H.','H.HHS.SS','HHS.SSH.','H.SSH.HH','HHH.S.S.','S.SSH.HH'],
 ['HHSSHHSS','HHH.SSS.','H.HHS.SS','HSHSHSHS','HHHSSSH.','SSHHH.SS','HH.HHSS.']];
-function mkNotes(n,base){const tier=Math.min(2,(RUN.st+1)>>1),pool=PAT[tier],L=[];let a=pool[Math.random()*pool.length|0],b=a;for(let i=0;b==a&&i<9;i++)b=pool[Math.random()*pool.length|0];
+const EZ=[['H.H.H.H.','H...H...','H.H.S.H.','H...S...'],['H.H.S.S.','H.S.H.S.','S.S.H.H.','H.H.H.S.','H...S...']];
+function mkNotes(n,base){const tier=RUN.st<2?-1:Math.min(2,(RUN.st-1)>>1),pool=tier<0?EZ[RUN.st]:PAT[tier],L=[];let a=pool[Math.random()*pool.length|0],b=a;for(let i=0;b==a&&i<9;i++)b=pool[Math.random()*pool.length|0];
 const bars=Math.ceil(n/4),N=[];for(let i=0;i<bars;i++){if(i&&i%2==0){a=b;b=pool[Math.random()*pool.length|0]}const p=i%4<2?a:b;for(let j=0;j<8;j++)p[j]!='.'&&N.push({t:base+2+i*2+j*.25,r:0,dec:p[j]=='S'?1:0})}return N}
 function mkOld(old,base){const f=old[0].t;return old.map(o=>({t:base+2+(o.t-f),r:0,dec:o.dec}))}
 function beginCPR(n,old){const base=RT()+.25,p=G.p;G.base=base;G.notes=old?mkOld(old,base):mkNotes(n,base);M.t0=base;M.s=0;M.y=PT.indexOf(p);G.mi=0;M.on=1;G.lt=T();go('cpr')}
@@ -211,7 +215,7 @@ const DM=['感謝大哥的火箭！','前排','這是演的吧','笑死','+1','�
 function mech(t){const id=G.p.id;if(id=='str')DM.forEach((s,i)=>{g.globalAlpha=.85;txt(s,W+40-((t*60+i*95)%(W+220)),130+i*52,15,'#fff');g.globalAlpha=1});
 if(id=='chef'){const sp=((t-G.base)/3)%1;if(sp>0&&sp<.4){g.shadowColor='#fff';g.shadowBlur=40;g.globalAlpha=Math.sin(sp/.4*Math.PI)*.85;R_(120,200,120,200,'#eef');g.globalAlpha=1;g.shadowBlur=0}}}
 function cprBtns(t){const bs=G.bs||[0,0];[[0,12,'#ff3b4e',heart],[1,184,'#8a5cff',skull]].forEach(([i,x,c,fn])=>{const on=t-bs[i]<.12;g.globalAlpha=on?.9:.55;g.fillStyle=c;g.beginPath();g.roundRect(x,574,164,56,14);g.fill();g.globalAlpha=1;g.lineWidth=3;g.strokeStyle=on?'#fff':'#ffffffaa';g.stroke();fn(x+82,602,3);txt(i?'骷髏 → 右':'← 左 愛心',x+82,574-8,11,C.paper,'center',C.ink)})}
-function dCpr(t){dt=Math.min(.05,t-G.lt);G.lt=t;const e=t-G.base,K=(RY-130)/.8;scene(t,G.pump);beatFx(t);
+function dCpr(t){dt=Math.min(.05,t-G.lt);G.lt=t;const e=t-G.base,K=(RY-130)/LK();scene(t,G.pump);beatFx(t);
 G.hp-=dt*(G.stam<=0?G.d.hd*2:G.d.hd);G.stam-=dt*G.d.dr;R_(150,120,60,RY-90,'#ffffff14');
 g.strokeStyle='#fff';g.lineWidth=3;g.beginPath();g.arc(180,RY,26*(G.pump&&t-G.pump<.12?1.15:1),0,7);g.stroke();
 for(const n of G.notes){if(!n.r&&t>n.t+.2){n.r=-1;G.seen++;pen('漏拍！',7,13)}if(!n.r){const y=RY-(n.t-t)*K;if(y>110&&y<RY+40){g.globalAlpha=G.p.id=='dj'&&y>300?.12:1;(n.dec?skull:heart)(180,y,3);g.globalAlpha=1}}}
